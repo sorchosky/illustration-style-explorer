@@ -10,7 +10,7 @@ function Swatch({ hex, name }) {
   );
 }
 
-function StyleOutput({ output, isGenerating, hasInput }) {
+function StyleOutput({ output, hasInput }) {
   if (!hasInput) {
     return (
       <div className="output-empty">
@@ -18,20 +18,7 @@ function StyleOutput({ output, isGenerating, hasInput }) {
           <circle cx="12" cy="12" r="9" />
           <path strokeLinecap="round" d="M12 7v5l3 3" />
         </svg>
-        <span>Select tags or upload an image to generate a style direction</span>
-      </div>
-    );
-  }
-
-  if (isGenerating) {
-    return (
-      <div className="output-loading">
-        <span>Generating style direction</span>
-        <span className="loading-dots">
-          <span className="dot" />
-          <span className="dot" />
-          <span className="dot" />
-        </span>
+        <span>Select tags to see your style direction</span>
       </div>
     );
   }
@@ -43,7 +30,7 @@ function StyleOutput({ output, isGenerating, hasInput }) {
       <div className="output-left">
         <p className="output-section-label">Color Palette</p>
         <div className="palette">
-          {output.colorPalette?.map(({ hex, name }) => (
+          {output.palette?.map(({ hex, name }) => (
             <Swatch key={hex} hex={hex} name={name} />
           ))}
         </div>
@@ -51,7 +38,7 @@ function StyleOutput({ output, isGenerating, hasInput }) {
 
       <div className="output-right">
         <p className="output-section-label">Style Direction</p>
-        <h2 className="style-label">{output.styleLabel}</h2>
+        <h2 className="style-label">{output.label}</h2>
         <p className="style-description">{output.description}</p>
       </div>
     </div>
