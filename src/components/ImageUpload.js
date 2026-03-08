@@ -1,109 +1,75 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { extractColorsFromImage } from '../utils/colorExtractor';
 
-function ImageUpload() {
+function ImageUpload({ onFileSelect, preview, isExtracting }) {
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [preview, setPreview] = useState(null);
-  const [palette, setPalette] = useState([]);
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [error, setError] = useState(null);
 
-  const processFile = useCallback(async (file) => {
+  const processFile = useCallback((file) => {
     if (!file || !file.type.startsWith('image/')) return;
-
-    setPreview(URL.createObjectURL(file));
-    setPalette([]);
-    setError(null);
-    setIsExtracting(true);
-
-    try {
-      const colors = await extractColorsFromImage(file, 5);
-      setPalette(colors);
-    } catch (err) {
-      setError('Could not extract colours — try a different image.');
-      console.error(err);
-    } finally {
-      setIsExtracting(false);
-    }
-  }, []);
+    const previewUrl = URL.createObjectURL(file);
+    onFileSelect(file, previewUrl);
+  }, [onFileSelect]);
 
   const handleDragOver  = (e) => { e.preventDefault(); setIsDragging(true); };
-  const handleDragLeave = ()  => setIsDragging(false);
-  const handleDrop      = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    processFile(e.dataTransfer.files[0]);
-  };
-  const handleClick      = () => fileInputRef.current?.click();
-  const handleFileChange = (e) => {
-    processFile(e.target.files[0]);
-    e.target.value = '';
-  };
+  const handleDragLeave = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false); };
+  const handleDrop      = (e) => { e.preventDefault(); setIsDragging(false); processFile(e.dataTransfer.files[0]); };
+  const handleClick     = () => fileInputRef.current?.click();
+  const handleChange    = (e) => { processFile(e.target.files[0]); e.target.value = ''; };
 
   return (
-    <div>
-      {/* Drop / click zone */}
-      <div
-        className={`upload-zone${isDragging ? ' dragging' : ''}${preview ? ' has-preview' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={handleClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={e => e.key === 'Enter' && handleClick()}
-        aria-label="Upload image to extract colours"
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          style={{ display: 'none' }}
-        />
+    <div
+      className={`upload-hero${isDragging ? ' dragging' : ''}${preview ? ' has-preview' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && handleClick()}
+      aria-label={preview ? 'Change reference image' : 'Upload a reference image'}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleChange}
+        style={{ display: 'none' }}
+      />
 
-        {preview ? (
-          <img src={preview} alt="Uploaded reference" className="preview-image" />
-        ) : (
-          <div className="upload-prompt">
-            <svg className="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round"
-                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+      {preview ? (
+        <>
+          <img src={preview} alt="Reference" className="hero-preview" />
+          <div className="hero-change-overlay">
+            <span className="hero-change-label">Change image</span>
+          </div>
+        </>
+      ) : (
+        <div className="hero-prompt">
+          <div className="hero-icon-wrap">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
+              aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
             </svg>
-            <span>Drop image here or click to upload</span>
-            <span className="upload-sub">Samples dominant colours via canvas</span>
           </div>
-        )}
-
-        {isExtracting && (
-          <div className="analyzing-overlay">
-            <span>Sampling colours</span>
-            <span className="loading-dots">
-              <span className="dot" />
-              <span className="dot" />
-              <span className="dot" />
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Extracted palette */}
-      {palette.length > 0 && (
-        <div className="extracted-palette">
-          <p className="extracted-palette-label">Extracted palette</p>
-          <div className="palette">
-            {palette.map(({ hex }) => (
-              <div key={hex} className="swatch">
-                <div className="swatch-color swatch-color--sm" style={{ backgroundColor: hex }} />
-                <span className="swatch-hex">{hex}</span>
-              </div>
-            ))}
-          </div>
+          <h2 className="hero-title">Upload a reference image</h2>
+          <p className="hero-subtitle">Drag and drop, or click to browse</p>
+          <p className="hero-formats">Supports JPG, PNG, WebP, GIF</p>
         </div>
       )}
 
-      {error && <p className="upload-error">{error}</p>}
+      {isExtracting && (
+        <div className="hero-extracting">
+          <span>Extracting colours</span>
+          <span className="loading-dots" aria-hidden="true">
+            <span className="dot" />
+            <span className="dot" />
+            <span className="dot" />
+          </span>
+        </div>
+      )}
     </div>
   );
 }
