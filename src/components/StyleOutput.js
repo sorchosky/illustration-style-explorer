@@ -1,46 +1,44 @@
 import React from 'react';
 
-function Swatch({ hex, name }) {
+function Swatch({ hex }) {
   return (
     <div className="swatch">
       <div className="swatch-color" style={{ backgroundColor: hex }} />
       <span className="swatch-hex">{hex}</span>
-      {name && <span className="swatch-name">{name}</span>}
     </div>
   );
 }
 
-function StyleOutput({ output, hasInput }) {
-  if (!hasInput) {
-    return (
-      <div className="output-empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="output-empty-icon">
-          <circle cx="12" cy="12" r="9" />
-          <path strokeLinecap="round" d="M12 7v5l3 3" />
-        </svg>
-        <span>Select tags to see your style direction</span>
-      </div>
-    );
-  }
-
-  if (!output) return null;
+/**
+ * Displays the image-derived colour palette and (when tags are selected)
+ * the matching style direction label and description.
+ *
+ * Props:
+ *   palette       — Array<{hex}> from image extraction
+ *   styleDir      — { label, description } | null  from tag matching
+ */
+function StyleOutput({ palette, styleDir }) {
+  if (!palette || palette.length === 0) return null;
 
   return (
-    <div className="output-content">
-      <div className="output-left">
-        <p className="output-section-label">Color Palette</p>
+    <div className="output-card">
+      {/* Palette */}
+      <div className="output-palette-section">
+        <p className="output-label">Colour palette</p>
         <div className="palette">
-          {output.palette?.map(({ hex, name }) => (
-            <Swatch key={hex} hex={hex} name={name} />
-          ))}
+          {palette.map(({ hex }) => <Swatch key={hex} hex={hex} />)}
         </div>
+        <p className="palette-attribution">Palette inspired by your image</p>
       </div>
 
-      <div className="output-right">
-        <p className="output-section-label">Style Direction</p>
-        <h2 className="style-label">{output.label}</h2>
-        <p className="style-description">{output.description}</p>
-      </div>
+      {/* Style direction — only when tags are active */}
+      {styleDir && (
+        <div className="output-direction-section">
+          <p className="output-label">Style direction</p>
+          <h2 className="style-label">{styleDir.label}</h2>
+          <p className="style-description">{styleDir.description}</p>
+        </div>
+      )}
     </div>
   );
 }
